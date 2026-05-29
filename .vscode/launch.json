@@ -1,0 +1,11 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Aspire: Launch AppHost",
+      "type": "dotnet",
+      "request": "launch",
+      "projectPath": "${workspaceFolder}/Overflow.AppHost/Overflow.AppHost.csproj"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Aspire: Run AppHost",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "${workspaceFolder}/Overflow.AppHost/Overflow.AppHost.csproj"
+      ],
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "Aspire: Watch AppHost",
+      "type": "shell",
+      "command": "dotnet",
+      "args": [
+        "watch",
+        "--project",
+        "${workspaceFolder}/Overflow.AppHost/Overflow.AppHost.csproj",
+        "run"
+      ],
+      "isBackground": true,
+      "problemMatcher": []
+    }
+  ]
+}
