@@ -5,23 +5,23 @@ using Microsoft.EntityFrameworkCore;
 using QuestionService.Data;
 using QuestionService.DTOs;
 using QuestionService.Models;
+using QuestionService.Services;
+using Wolverine;
 
 namespace QuestionService.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class QuestionsController(QuestionDbContext db): ControllerBase
+public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagService tagService): ControllerBase
 {
     [Authorize]
     [HttpPost]
     public async Task<ActionResult<Question>> CreateQuestion(CreateQuestionDto dto)
     {
-        var validTags = await db.Tags.Where(x=> dto.Tags.Contains(x.Slug)).ToListAsync();
-        
-        var missing = dto.Tags.Except(validTags.Select(x=> x.Slug).ToList()).ToList();
-        
-        if (missing.Count() != 0)
-            return BadRequest($"Invalid tags: {string.Join(", ", missing)}");
+        if (!await tagService.AreTagsValidAsync(dto.Tags))
+        {
+            return BadRequest("One or more tags are invalid.");
+        }
         
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var name = User.FindFirstValue("name");
@@ -40,6 +40,15 @@ public class QuestionsController(QuestionDbContext db): ControllerBase
 
         db.Questions.Add(question);
         await db.SaveChangesAsync();
+
+        await bus.PublishAsync(new Contracts.QuestionCreated(
+            QuestionId: question.Id,
+            Title: question.Title,
+            Content: question.Content,
+            Created: question.CreatedAt,
+            Tags: question.TagSlugs
+        ));
+
         return Created($"/question/{question.Id}", question);
     }
 
@@ -110,12 +119,10 @@ public class QuestionsController(QuestionDbContext db): ControllerBase
             return Forbid();
         }
 
-        var validTags = await db.Tags.Where(x=> dto.Tags.Contains(x.Slug)).ToListAsync();
-        
-        var missing = dto.Tags.Except(validTags.Select(x=> x.Slug).ToList()).ToList();
-        
-        if (missing.Count() != 0)
-            return BadRequest($"Invalid tags: {string.Join(", ", missing)}");
+        if (!await tagService.AreTagsValidAsync(dto.Tags))
+        {
+            return BadRequest("One or more tags are invalid.");
+        }
 
 
         question.Title = dto.Title;
