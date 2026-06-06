@@ -14,7 +14,7 @@ public class SearchQuestion
     [JsonPropertyName("tags")]
     public string[] Tags { get; set; } = [];
     [JsonPropertyName("createdAt")]
-    public required long CreatedAt { get; set; }
+    public long CreatedAt { get; set; }
     [JsonPropertyName("hasAcceptedAnswer")]
     public bool HasAcceptedAnswer { get; set; }
     [JsonPropertyName("answerCount")]

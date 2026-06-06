@@ -60,7 +60,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapDefaultEndpoints();
 
-app.MapGet("/search", async (string query, ITypesenseClient client) =>
+app.MapGet("/search", async (string query, ITypesenseClient client, ILogger<Program> logger) =>
 {
     string? tag = null; 
     var tagMatch = Regex.Match(query, @"\[(.*?)\]");
@@ -83,7 +83,26 @@ app.MapGet("/search", async (string query, ITypesenseClient client) =>
     }
     catch (TypesenseApiException ex)
     {
-        Console.WriteLine($"Typesense API error: {ex.Message}");
+        logger.LogError(ex, "Typesense API error during search for query {Query}", query);
+        return Results.Problem("An error occurred while searching. Please try again later.");
+    }
+});
+
+app.MapGet("/search/similar-titles", async (string query, ITypesenseClient client, ILogger<Program> logger) =>
+{
+    var searchParameters = new SearchParameters(query, "title")
+    {
+        SortBy = "createdAt:desc"
+    };
+
+    try
+    {
+        var searchResults = await client.Search<SearchService.Models.SearchQuestion>("questions", searchParameters);
+        return Results.Ok(searchResults.Hits.Select(hit => hit.Document));
+    }
+    catch (TypesenseApiException ex)
+    {
+        logger.LogError(ex, "Typesense API error during similar-titles search for query {Query}", query);
         return Results.Problem("An error occurred while searching. Please try again later.");
     }
 });

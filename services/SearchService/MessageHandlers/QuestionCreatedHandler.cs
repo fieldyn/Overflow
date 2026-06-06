@@ -7,7 +7,7 @@ namespace SearchService.MessageHandlers;
 
 public class QuestionCreatedHandler(ITypesenseClient client)
 {
-    public async Task Handle(Contracts.QuestionCreated message)
+    public async Task HandleAsync(Contracts.QuestionCreated message)
     {
         var created = new DateTimeOffset(message.Created).ToUnixTimeSeconds();
         
