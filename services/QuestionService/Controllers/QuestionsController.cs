@@ -210,6 +210,11 @@ public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagServi
             return Forbid();
         }
 
+        if(answer.Accepted)
+        {
+            return BadRequest("Cannot edit an accepted answer.");
+        }
+
         answer.Content = dto.Content;
         answer.UpdatedAt = DateTime.UtcNow;
         await db.SaveChangesAsync();
@@ -238,6 +243,12 @@ public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagServi
         {
             return Forbid();
         }
+
+        if(answer.Accepted)
+        {
+            return BadRequest("Cannot delete an accepted answer.");
+        }
+
         question.Answers.Remove(answer);
         question.AnswersCount = question.Answers.Count;
 
@@ -276,6 +287,11 @@ public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagServi
         if (question.AskerId != userId)
         {
             return Forbid();
+        }
+
+        if(question.HasAcceptedAnswer)
+        {
+            return BadRequest("This question already has an accepted answer.");
         }
 
         question.HasAcceptedAnswer = true;
