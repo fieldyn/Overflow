@@ -5,7 +5,7 @@ using Typesense;
 
 namespace SearchService.MessageHandlers;
 
-public class QuestionCreatedHandler(ITypesenseClient client)
+public class QuestionCreatedHandler(ITypesenseClient client, ILogger<QuestionCreatedHandler> logger)
 {
     public async Task HandleAsync(Contracts.QuestionCreated message)
     {
@@ -22,7 +22,7 @@ public class QuestionCreatedHandler(ITypesenseClient client)
         
         await client.CreateDocument("questions", doc);
         
-        Console.WriteLine($"Created question {message.QuestionId}");
+        logger.LogInformation($"Created question {message.QuestionId}");
         
     }
 

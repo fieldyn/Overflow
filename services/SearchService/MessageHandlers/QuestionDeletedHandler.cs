@@ -4,12 +4,12 @@ using Typesense;
 
 namespace SearchService.MessageHandlers;
 
-public class QuestionDeletedHandler(ITypesenseClient client)
+public class QuestionDeletedHandler(ITypesenseClient client, ILogger<QuestionDeletedHandler> logger)
 {
     public async Task HandleAsync(Contracts.QuestionDeleted message)
     {
         await client.DeleteDocument<SearchQuestion>("questions", message.QuestionId);
         
-        Console.WriteLine($"Deleted question {message.QuestionId}");
+        logger.LogInformation($"Deleted question {message.QuestionId}");
     }
 }

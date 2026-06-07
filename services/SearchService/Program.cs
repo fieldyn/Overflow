@@ -43,6 +43,11 @@ builder.Services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
 
 builder.Host.UseWolverine(options =>
 {
+    // ITypesenseClient is registered via an opaque lambda factory, so Wolverine
+    // can't inline it in generated handler code. Allow service location for just
+    // this type (ServiceLocationPolicy.NotAllowed is the Wolverine 6.0 default).
+    options.CodeGeneration.AlwaysUseServiceLocationFor<ITypesenseClient>();
+
     options.UseRabbitMqUsingNamedConnection("messaging").AutoProvision();
     options.ListenToRabbitQueue("questions.search", cfg =>
     {

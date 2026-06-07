@@ -13,7 +13,7 @@ namespace QuestionService.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagService tagService): ControllerBase
+public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagService tagService) : ControllerBase
 {
     [Authorize]
     [HttpPost]
@@ -23,11 +23,11 @@ public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagServi
         {
             return BadRequest("One or more tags are invalid.");
         }
-        
+
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var name = User.FindFirstValue("name");
-        
-        if(userId is null || name is null)
+
+        if (userId is null || name is null)
             return BadRequest("User information is missing from the token.");
 
         var question = new Question
@@ -70,7 +70,10 @@ public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagServi
     [HttpGet("{id}")]
     public async Task<ActionResult<Question>> GetQuestion(string id)
     {
-        var question = await db.Questions.FindAsync(id);
+        var question = await db.Questions
+            .Include(q => q.Answers)
+            .FirstOrDefaultAsync(q => q.Id == id);
+
         if (question == null)
         {
             return NotFound();
@@ -141,6 +144,146 @@ public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagServi
             Title: question.Title,
             Content: question.Content,
             Tags: question.TagSlugs.AsArray()
+        ));
+
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpPost("{questionId}/answers")]
+    public async Task<ActionResult<Answer>> AddAnswer(string questionId, CreateAnswerDto dto)
+    {
+        var question = await db.Questions
+            .Include(q => q.Answers)
+            .FirstOrDefaultAsync(q => q.Id == questionId);
+        if (question == null)
+        {
+            return NotFound();
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var name = User.FindFirstValue("name");
+        if (userId is null || name is null)
+            return BadRequest("User information is missing from the token.");
+
+        var answer = new Answer
+        {
+            Content = dto.Content,
+            UserDisplayName = name,
+            UserId = userId,
+            QuestionId = questionId
+        };
+
+        question.Answers.Add(answer);
+        question.AnswersCount = question.Answers.Count;
+
+        await db.SaveChangesAsync();
+
+        await bus.PublishAsync(new Contracts.AnswerCountUpdated(
+            QuestionId: questionId,
+            AnswerCount: question.AnswersCount
+        ));
+
+        return Created($"/question/{questionId}/answers/{answer.Id}", answer);
+    }
+
+    [Authorize]
+    [HttpPut("{questionId}/answers/{answerId}")]
+    public async Task<IActionResult> UpdateAnswer(string questionId, string answerId, CreateAnswerDto dto)
+    {
+        var question = await db.Questions
+            .Include(q => q.Answers)
+            .FirstOrDefaultAsync(q => q.Id == questionId);
+
+        if (question == null)
+        {
+            return NotFound();
+        }
+        var answer = question.Answers.FirstOrDefault(a => a.Id == answerId);
+        if (answer == null)
+        {
+            return NotFound();
+        }
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (answer.UserId != userId)
+        {
+            return Forbid();
+        }
+
+        answer.Content = dto.Content;
+        answer.UpdatedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpDelete("{questionId}/answers/{answerId}")]
+    public async Task<IActionResult> DeleteAnswer(string questionId, string answerId)
+    {
+        var question = await db.Questions
+            .Include(q => q.Answers)
+            .FirstOrDefaultAsync(q => q.Id == questionId);
+
+        if (question == null)
+        {
+            return NotFound();
+        }
+        var answer = question.Answers.FirstOrDefault(a => a.Id == answerId);
+        if (answer == null)
+        {
+            return NotFound();
+        }
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (answer.UserId != userId)
+        {
+            return Forbid();
+        }
+        question.Answers.Remove(answer);
+        question.AnswersCount = question.Answers.Count;
+
+        await db.SaveChangesAsync();
+
+        await bus.PublishAsync(new Contracts.AnswerCountUpdated(
+            QuestionId: questionId,
+            AnswerCount: question.Answers.Count
+        ));
+        
+        return NoContent();
+    }
+
+    [Authorize]
+    [HttpPost("{questionId}/answers/{answerId}/accept")]
+    public async Task<IActionResult> AcceptAnswer(string questionId, string answerId)
+    {
+        var question = await db.Questions
+            .Include(q => q.Answers)
+            .FirstOrDefaultAsync(q => q.Id == questionId);
+
+        if (question == null)
+        {
+            return NotFound();
+        }
+
+        var answer = question.Answers.FirstOrDefault(a => a.Id == answerId);
+
+        if (answer == null)
+        {
+            return NotFound();
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (question.AskerId != userId)
+        {
+            return Forbid();
+        }
+
+        question.HasAcceptedAnswer = true;
+        answer.Accepted = true;
+        await db.SaveChangesAsync();
+
+        await bus.PublishAsync(new Contracts.AnswerAccepted(
+            QuestionId: questionId
         ));
 
         return NoContent();

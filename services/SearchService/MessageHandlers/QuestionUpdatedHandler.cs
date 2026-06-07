@@ -6,7 +6,7 @@ using Typesense;
 
 namespace SearchService.MessageHandlers;
 
-public class QuestionUpdatedHandler(ITypesenseClient client)
+public class QuestionUpdatedHandler(ITypesenseClient client, ILogger<QuestionUpdatedHandler> logger)
 {
     public async Task HandleAsync(Contracts.QuestionUpdated message)
     {
@@ -16,7 +16,7 @@ public class QuestionUpdatedHandler(ITypesenseClient client)
             Tags = message.Tags.ToArray()
         });
 
-        Console.WriteLine($"Updated question {message.QuestionId}");
+        logger.LogInformation($"Updated question {message.QuestionId}");
     }
 
     private static string StripHtml(string content)

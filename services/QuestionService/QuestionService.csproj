@@ -14,7 +14,8 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="WolverineFx.RabbitMQ" Version="4.12.3" />
+        <PackageReference Include="WolverineFx.RabbitMQ" Version="6.5.0" />
+        <PackageReference Include="WolverineFx.RuntimeCompilation" Version="6.5.0" />
     </ItemGroup>
 
     <ItemGroup>
