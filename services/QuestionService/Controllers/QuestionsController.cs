@@ -304,4 +304,20 @@ public class QuestionsController(QuestionDbContext db, IMessageBus bus, TagServi
 
         return NoContent();
     }
+
+    [HttpGet("errors")]
+    public IActionResult GetErrorResponses(int code)
+    {
+        ModelState.AddModelError("Problem one", "This is an example error message.");
+        ModelState.AddModelError("Problem two", "This is another example error message.");
+        return code switch
+        {
+            400 => BadRequest("This is a bad request example."),
+            401 => Unauthorized("This is an unauthorized example."),
+            403 => Forbid("This is a forbidden example."),
+            404 => NotFound("This is a not found example."),
+            500 => throw new Exception("This is an internal server error example."),
+            _ => ValidationProblem(ModelState)
+        };
+    }
 }
