@@ -38,4 +38,13 @@ var searchService = builder.AddProject<Projects.SearchService>("search-svc")
     .WaitFor(typesense)
     .WaitFor(rabbitmq);
 
+var yarp = builder.AddYarp("gateway")
+    .WithHostPort(8001)
+    .WithConfiguration(yarpBuilder =>
+    {
+        yarpBuilder.AddRoute("/questions/{**catch-all}", questionService);
+        yarpBuilder.AddRoute("/tags/{**catch-all}", questionService);
+        yarpBuilder.AddRoute("/search/{**catch-all}", searchService);
+    });
+
 builder.Build().Run();
