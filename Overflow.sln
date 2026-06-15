@@ -14,6 +14,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "common", "common", "{881589
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Contracts", "common\Contracts\Contracts.csproj", "{A634DCD0-3312-4D24-A1CB-A0459B53532C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infra", "infra", "{B9D0CA22-40EA-45C9-961B-D97506D45A20}"
+	ProjectSection(SolutionItems) = preProject
+		infra\.env = infra\.env
+		infra\docker-compose.yaml = infra\docker-compose.yaml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
