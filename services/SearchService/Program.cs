@@ -1,6 +1,7 @@
 
 
 using System.Text.RegularExpressions;
+using Common;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Typesense;
@@ -14,6 +15,16 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.AddServiceDefaults();
+
+builder.AddWolverineMessaging(options =>
+{
+    options.ListenToRabbitQueue("questions.search", cfg =>
+    {
+        cfg.BindExchange("questions");
+    });
+    
+    options.ApplicationAssembly = typeof(Program).Assembly;
+});
 
 var typesenseUri = builder.Configuration["services:typesense:typesense:0"];
 
@@ -34,28 +45,12 @@ builder.Services.AddTypesenseClient(config =>
     config.Nodes = new List<Typesense.Setup.Node> { new(uri.Host, uri.Port.ToString(), uri.Scheme) };
 });
 
-builder.Services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
-{
-    tracerProviderBuilder.SetResourceBuilder(ResourceBuilder.CreateDefault()
-        .AddService(builder.Environment.ApplicationName))
-        .AddSource("Wolverine");
-});
-
-builder.Host.UseWolverine(options =>
-{
-    // ITypesenseClient is registered via an opaque lambda factory, so Wolverine
-    // can't inline it in generated handler code. Allow service location for just
-    // this type (ServiceLocationPolicy.NotAllowed is the Wolverine 6.0 default).
-    options.CodeGeneration.AlwaysUseServiceLocationFor<ITypesenseClient>();
-
-    options.UseRabbitMqUsingNamedConnection("messaging").AutoProvision();
-    options.ListenToRabbitQueue("questions.search", cfg =>
-    {
-        cfg.BindExchange("questions");
-    });
-});
 
 var app = builder.Build();
+
+app.WaitForRabbitMqAsync(app.Services.GetRequiredService<ILogger<Program>>())
+    .GetAwaiter()
+    .GetResult();
 
 if (app.Environment.IsDevelopment())
 {

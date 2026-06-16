@@ -1,4 +1,5 @@
 using System.Net.Sockets;
+using Common;
 using Microsoft.EntityFrameworkCore;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -28,48 +29,17 @@ builder.Services.AddAuthentication()
 
 builder.AddNpgsqlDbContext<QuestionDbContext>("questionDb");
 
-builder.Services.AddOpenTelemetry().WithTracing(tracerProviderBuilder =>
+builder.AddWolverineMessaging(options =>
 {
-    tracerProviderBuilder.SetResourceBuilder(ResourceBuilder.CreateDefault()
-        .AddService(builder.Environment.ApplicationName))
-        .AddSource("Wolverine");
-});
-
-var loggerFactory = LoggerFactory.Create(b => b.AddConsole());
-var logger = loggerFactory.CreateLogger<Program>();
-
-var retryPolicy = Policy
-    .Handle<BrokerUnreachableException>()
-    .Or<SocketException>()
-    .WaitAndRetryAsync(
-        retryCount: 5,
-        retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-        (exception, timeSpan, retryCount, context) =>
-        {
-            logger.LogWarning(exception,
-                "RabbitMQ connection failed. Waiting {TimeSpan} before next retry. Retry attempt {RetryCount}.",
-                timeSpan, retryCount);
-        });
-
-await retryPolicy.ExecuteAsync(async () =>
-{
-    var endpoint = builder.Configuration.GetConnectionString("messaging") 
-    ?? throw new InvalidOperationException("RabbitMQ connection string is not configured.");
-
-    var factory = new ConnectionFactory
-    {
-        Uri = new Uri(endpoint)
-    };
-    await using var connection = await factory.CreateConnectionAsync();
-});
-
-
-builder.Host.UseWolverine(options =>
-{
-    options.UseRabbitMqUsingNamedConnection("messaging").AutoProvision();
     options.PublishAllMessages().ToRabbitExchange("questions");
+    options.ApplicationAssembly = typeof(Program).Assembly;
 });
+
 var app = builder.Build();
+
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+
+await app.WaitForRabbitMqAsync(logger);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
