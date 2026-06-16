@@ -176,8 +176,8 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://production-dashboard:18889"
       OTEL_EXPORTER_OTLP_PROTOCOL: "grpc"
       OTEL_SERVICE_NAME: "gateway"
-    expose:
-      - "5000"
+    ports:
+      - "8001:5000"
     networks:
       - "aspire"
 networks:

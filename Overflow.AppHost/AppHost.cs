@@ -51,6 +51,7 @@ var searchService = builder.AddProject<Projects.SearchService>("search-svc")
 
 var yarp = builder.AddYarp("gateway")
     .WithHostPort(8001)
+    .WithExternalHttpEndpoints()
     .WithConfiguration(yarpBuilder =>
     {
         yarpBuilder.AddRoute("/questions/{**catch-all}", questionService);
