@@ -11,9 +11,9 @@ public class QuestionUpdatedHandler(ITypesenseClient client, ILogger<QuestionUpd
     public async Task HandleAsync(Contracts.QuestionUpdated message)
     {
         await client.UpdateDocument("questions", message.QuestionId, new {
-            Title = message.Title,
-            Content = StripHtml(message.Content),
-            Tags = message.Tags.ToArray()
+            title = message.Title,
+            content = StripHtml(message.Content),
+            tags = message.Tags.ToArray()
         });
 
         logger.LogInformation($"Updated question {message.QuestionId}");

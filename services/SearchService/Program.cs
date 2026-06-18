@@ -22,7 +22,12 @@ builder.AddWolverineMessaging(options =>
     {
         cfg.BindExchange("questions");
     });
-    
+
+    // ITypesenseClient is registered as a typed HttpClient (opaque factory), which
+    // Wolverine's runtime codegen can't build inline -> "Frame chain is being re-arranged".
+    // Force it to be resolved from the IoC container instead.
+    options.CodeGeneration.AlwaysUseServiceLocationFor<ITypesenseClient>();
+
     options.ApplicationAssembly = typeof(Program).Assembly;
 });
 

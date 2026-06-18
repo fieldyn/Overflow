@@ -2,15 +2,12 @@ using Typesense;
 
 namespace SearchService.MessageHandlers;
 
-public class AnswerCountHandler
+public class AnswerCountHandler(ITypesenseClient client, ILogger<AnswerCountHandler> logger)
 {
-    public async Task HandleAsync(
-        Contracts.AnswerCountUpdated message,
-        ITypesenseClient client,
-        ILogger<AnswerCountHandler> logger)
+    public async Task HandleAsync(Contracts.AnswerCountUpdated message)
     {
         await client.UpdateDocument("questions", message.QuestionId, new {
-            AnswerCount = message.AnswerCount
+            answerCount = message.AnswerCount
         });
 
         logger.LogInformation($"Updated answer count for question {message.QuestionId} to {message.AnswerCount}");
