@@ -4,6 +4,7 @@
     <attachedFolders>
       <Path>.</Path>
       <Path>infra</Path>
+      <Path>webapp</Path>
     </attachedFolders>
     <explicitIncludes />
     <explicitExcludes />
