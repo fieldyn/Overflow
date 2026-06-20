@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 export default function Providers({ children }: { children: ReactNode }) {
   // 2. Wrap HeroUIProvider at the root of your app
   return (
-    <HeroUIProvider>
+    <HeroUIProvider className="h-full flex flex-col">
       {children}
     </HeroUIProvider>
   );
