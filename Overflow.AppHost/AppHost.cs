@@ -15,7 +15,13 @@ var keycloak = builder.AddKeycloak("keycloak", 6001)
     .WithEnvironment("KC_HTTP_ENABLED", "true")
     .WithEnvironment("KC_HOSTNAME_STRICT", "false")
     .WithEnvironment("VIRTUAL_HOST", "id.overflow.local")
-    .WithEnvironment("VIRTUAL_PORT", "8080");;
+    .WithEnvironment("VIRTUAL_PORT", "8080")
+    .WithEndpoint("http", e =>
+    {
+        e.Port = 6001;        // puerto host fijo
+        e.TargetPort = 8080;  // HTTP dentro del contenedor
+        e.IsProxied = false;  // bind directo, sin proxy de Aspire
+    });
 
 var postgres = builder.AddPostgres("postgres", port: 5432)
     .WithDataVolume("postgres-data2")
@@ -60,8 +66,12 @@ var yarp = builder.AddYarp("gateway")
         yarpBuilder.AddRoute("/tags/{**catch-all}", questionService);
         yarpBuilder.AddRoute("/search/{**catch-all}", searchService);
     })
-    .WithEnvironment("ASPNETCORE_URLS", "http://+:8001")
-    .WithEndpoint(8001, 8001, scheme: "http", name: "gateway", isExternal: true)
+    .WithEndpoint("http", e =>
+    {
+        e.Port = 8001;        // puerto host fijo que espera la webapp
+        e.TargetPort = 5000;  // donde YARP escucha de verdad dentro del contenedor
+        e.IsProxied = false;  // bind directo, sin proxy de Aspire
+    })
     .WithEnvironment("VIRTUAL_HOST", "api.overflow.local")
     .WithEnvironment("VIRTUAL_PORT", "8001");
 

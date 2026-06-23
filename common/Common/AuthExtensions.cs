@@ -34,9 +34,11 @@ public static class AuthExtensions
                     options.Audience = Audience;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        ValidIssuers = new[] { 
+                        ValidIssuers = new[] {
                             $"http://{KeycloakServiceName}/realms/{Realm}",
+                            $"https://{KeycloakServiceName}/realms/{Realm}",
                             "http://localhost:6001/realms/overflow", // For local development when "keycloak" doesn't resolve
+                            "https://localhost:6001/realms/overflow", // Aspire 13.3.5 serves Keycloak over HTTPS, so tokens are issued with this issuer
                             "http://id.overflow.local/realms/overflow" // For local development with Aspire CLI's /etc/hosts modification
                              },
                     };
