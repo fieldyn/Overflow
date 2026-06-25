@@ -4,6 +4,8 @@ import { Question } from "@/lib/types"
 import { Chip } from "@heroui/chip";
 import { Avatar } from "@heroui/avatar";
 import Link from "next/link";
+import clsx from "clsx";
+import { CheckIcon } from "@heroicons/react/24/outline";
 
 type Props = {
     question: Question;
@@ -13,9 +15,21 @@ export default function QuestionCard({ question }: Props) {
     return (
         <div className="flex gap-6 px-6">
             <div className="flex flex-col text-sm gap-3 min-w-[6rem]">
-                <div>{question.votes} {question.votes === 1 ? 'vote' : 'votes'} </div>
-                <div>{question.answersCount} {question.answersCount === 1 ? 'answer' : 'answers'} </div>
-                <div>{question.viewCount} {question.viewCount === 1 ? 'view' : 'views'} </div>
+                <div>
+                    <span>{question.votes}</span> {question.votes === 1 ? 'vote' : 'votes'}
+                </div>
+                <div>
+                    <span className={clsx('inline-flex items-center gap-1 rounded px-2 py-1', {
+                        'border border-success text-success': question.answersCount > 0 && !question.hasAcceptedAnswer,
+                        'border border-success bg-success text-white': question.hasAcceptedAnswer,
+                    })}>
+                        {question.hasAcceptedAnswer && <CheckIcon className="h-4 w-4" strokeWidth={3} />}
+                        {question.answersCount} {question.answersCount === 1 ? 'answer' : 'answers'}
+                    </span>
+                </div>
+                <div>
+                    <span>{question.viewCount}</span> {question.viewCount === 1 ? 'view' : 'views'}
+                </div>
             </div>
             <div className="flex flex-1 justify-between min-h-[8rem]">
                 <div className="flex flex-col gap-2">
