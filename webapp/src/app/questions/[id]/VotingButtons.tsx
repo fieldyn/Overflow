@@ -1,15 +1,20 @@
 "use client";
 
 import { Button } from "@heroui/button";
-import { ChevronUpIcon, ChevronDownIcon } from "@heroicons/react/24/outline";
+import {
+    ChevronUpIcon,
+    ChevronDownIcon,
+    CheckIcon,
+} from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useState } from "react";
 
 type Props = {
     votes: number;
+    accepted?: boolean;
 };
 
-export default function VotingButtons({ votes }: Props) {
+export default function VotingButtons({ votes, accepted }: Props) {
     // -1 = downvoted, 0 = none, 1 = upvoted
     const [vote, setVote] = useState<-1 | 0 | 1>(0);
 
@@ -42,6 +47,15 @@ export default function VotingButtons({ votes }: Props) {
             >
                 <ChevronDownIcon className="h-6 w-6" />
             </Button>
+
+            {accepted && (
+                <span
+                    className="mt-1 rounded-full bg-success p-1 text-white"
+                    title="Accepted answer"
+                >
+                    <CheckIcon className="h-5 w-5" strokeWidth={3} />
+                </span>
+            )}
         </div>
     );
 }
