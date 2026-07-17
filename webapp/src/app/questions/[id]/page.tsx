@@ -9,8 +9,9 @@ type Params = Promise<{id: string}>
 
 export default async function QuestionDetailedPage({params}: {params: Params}) {
     const id = (await params).id;
-    const question = await getQuestionsById(id);
+    const {data: question, error} = await getQuestionsById(id);
 
+    if (error) throw new Error(error.message);
     if(!question) return notFound();
     
   return (

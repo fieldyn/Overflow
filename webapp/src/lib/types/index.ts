@@ -14,6 +14,13 @@ export type Question = {
   answers: Answer[]
 }
 
+export type Tag = {
+  id: string
+  name: string
+  slug: string
+  description: string
+}
+
 export type Answer = {
   id: string
   content: string

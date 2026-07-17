@@ -4,7 +4,9 @@ import QuestionsHeader from "./QuestionsHeader";
 
 export default async function QuestionsPage({searchParams}:{searchParams?:Promise<{tag?:string}>}) {
     const params = await searchParams;
-    const questions = await getQuestions(params?.tag);
+    const {data: questions, error} = await getQuestions(params?.tag);
+
+    if (error || !questions) throw new Error(error?.message || 'Failed to load questions');
   return (
     <>
     <QuestionsHeader total={questions.length} tag={params?.tag} />

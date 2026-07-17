@@ -1,8 +1,10 @@
 import { RequestInit } from "next/dist/server/web/spec-extension/request";
+import { notFound } from "next/navigation";
 
 export async function fetchClient<T>(url: string,
      method: 'GET' | 'POST' | 'PUT' | 'DELETE',
-      options: Omit<RequestInit, 'body'> & {body?: unknown} = {}) : Promise<T> {
+      options: Omit<RequestInit, 'body'> & {body?: unknown} = {}
+    ) : Promise<{data: T | null, error?: {message: string, status: number}}> {
         const {body, ...rest} = options;
         const apiUrl = process.env.API_URL;
 
@@ -20,14 +22,30 @@ export async function fetchClient<T>(url: string,
             ...rest
         })
 
-        if(!response.ok){
-            const contentType = response.headers.get('Content-type');
-            const isJson = contentType?.includes('application/json') 
-            || contentType?.includes('application/problem+json');
-            const errorData = isJson ? await response.json() : await response.text();
+        const contentType = response.headers.get('Content-type');
+        const isJson = contentType?.includes('application/json') 
+        || contentType?.includes('application/problem+json');
+        const parsed = isJson ? await response.json() : await response.text();
 
-            throw new Error(`${errorData.message || 'An error ocurred'}`);
+        if(!response.ok){
+            if (response.status === 404) return notFound();
+
+            const message = typeof parsed === 'string' && parsed
+                ? parsed
+                : parsed?.title || parsed?.detail || getFallbackMessage(response.status);
+
+            return {data: null, error: {message, status: response.status}};
         }
 
-        return response.json();
+        return {data: parsed as T};
       }
+
+function getFallbackMessage(status: number) {
+    switch (status) {
+        case 400: return 'Bad request';
+        case 401: return 'Unauthorized';
+        case 403: return 'Forbidden';
+        case 500: return 'Internal server error';
+        default: return 'An error occurred';
+    }
+}
