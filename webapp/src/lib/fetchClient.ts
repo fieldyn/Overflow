@@ -26,7 +26,7 @@ export async function fetchClient<T>(url: string,
             || contentType?.includes('application/problem+json');
             const errorData = isJson ? await response.json() : await response.text();
 
-            throw new Error(`${errorData || 'An error ocurred'}`);
+            throw new Error(`${errorData.message || 'An error ocurred'}`);
         }
 
         return response.json();
